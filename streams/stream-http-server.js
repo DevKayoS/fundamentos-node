@@ -8,11 +8,12 @@ class InverseNumberStream extends Transform{
     callback(null, Buffer.from(String(transformed)) )
   }
 }
-
-
 // req ->readbleStream
 // res -> writableStream
 const server = http.createServer((req, res)=> {
+  
+
+
   return req
   .pipe(new InverseNumberStream())
   .pipe(res)
