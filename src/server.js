@@ -1,5 +1,7 @@
 import http from 'node:http'
+import { randomUUID } from 'node:crypto';
 import { json } from './middlewares/json.js'
+import {Database} from './middlewares/database.js'
 
 // GET => Buscar recurso no back-end
 // POST => Criar um recurso no back-end
@@ -14,7 +16,7 @@ import { json } from './middlewares/json.js'
 
 // cabecalhos (requisicao/resposta) => Metadados
 
-const users = [];
+const database = new Database();
 
 const server = http.createServer(async (req, res)=> {
   await json(req, res)
@@ -22,8 +24,9 @@ const server = http.createServer(async (req, res)=> {
   const {method, url} = req
 
   if(method === 'GET' && url === '/users'){
+    const users = database.select('users')
+
     return res
-    .writeHead(200)
     .end(JSON.stringify(users))
   }
 
@@ -31,11 +34,13 @@ const server = http.createServer(async (req, res)=> {
   if (method === 'POST' && url === '/users'){
     const {name, email} = req.body
 
-    users.push({
-      id: 1,
+    const users = {
+      id: randomUUID(),
       name,
       email
-    })
+    }
+
+    database.insert('users', users)
 
     return res
       .writeHead(201) 
