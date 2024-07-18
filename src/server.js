@@ -1,4 +1,5 @@
 import http from 'node:http'
+import { json } from './middlewares/json.js'
 
 // GET => Buscar recurso no back-end
 // POST => Criar um recurso no back-end
@@ -15,22 +16,25 @@ import http from 'node:http'
 
 const users = [];
 
-const server = http.createServer((req, res)=> {
+const server = http.createServer(async (req, res)=> {
+  await json(req, res)
+
   const {method, url} = req
 
   if(method === 'GET' && url === '/users'){
     return res
-    .setHeader('Content-type', 'application/json')
     .writeHead(200)
     .end(JSON.stringify(users))
   }
 
   //created user in memory
   if (method === 'POST' && url === '/users'){
+    const {name, email} = req.body
+
     users.push({
       id: 1,
-      name: 'John Doe',
-      email: 'johndoe@example.com'
+      name,
+      email
     })
 
     return res
