@@ -1,7 +1,7 @@
 import http from 'node:http'
-import { randomUUID } from 'node:crypto';
 import { json } from './middlewares/json.js'
-import {Database} from './middlewares/database.js'
+import {Database} from './database.js'
+import { routes } from './routes.js';
 
 // GET => Buscar recurso no back-end
 // POST => Criar um recurso no back-end
@@ -16,35 +16,35 @@ import {Database} from './middlewares/database.js'
 
 // cabecalhos (requisicao/resposta) => Metadados
 
+// Query Paramaters: URL stateful => Filtros, paginação, não-obrigatorias
+// Route Paramaters: identificação de recurso
+// Request body: Envio de informações de um formulário (HTTPs)
+
+// http://localhost:3333/users?userId=1
+// GET http://localhost:3333/users/1 -> basicamente pegando o usuario pelo id
+// DELETE http://localhost:3333/users/1 -> deletando o usuario pelo id
+
+//POST http://localhost:3333/users -> criando um usuário novo
+
+//Edição e remoção de usuário
+
 const database = new Database();
 
 const server = http.createServer(async (req, res)=> {
+  const {method, url} = req
+  
   await json(req, res)
 
-  const {method, url} = req
+  const route = routes.find(route => {
+    return route.method === method && route.path.test(url)
+  })
 
-  if(method === 'GET' && url === '/users'){
-    const users = database.select('users')
+  if(route){
+    const routeParams = req.url.match(route.path)
 
-    return res
-    .end(JSON.stringify(users))
-  }
+    req.params  = {...routeParams.groups}
 
-  //created user in memory
-  if (method === 'POST' && url === '/users'){
-    const {name, email} = req.body
-
-    const users = {
-      id: randomUUID(),
-      name,
-      email
-    }
-
-    database.insert('users', users)
-
-    return res
-      .writeHead(201) 
-      .end()
+    return route.handler(req, res)
   }
 
   return res.writeHead(404).end('Not found')

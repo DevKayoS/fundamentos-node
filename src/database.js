@@ -14,7 +14,7 @@ export class Database {
       this.#persist()
     })
   }
-
+  //persistindo o dado no banco de dados ficticio
   #persist() {
     fs.writeFile(databasePath, JSON.stringify(this.#database))
   }
@@ -34,5 +34,23 @@ export class Database {
     this.#persist()
 
      return data
+  }
+  //atualizando o usuário por id
+  update(table, id, data){
+    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+    //na variavel acima caso ele nao ache um id que seja igual ao id que veio do req.params ele retorna -1 por isso o (rowindex -1)
+    if(rowIndex > -1){
+      this.#database[table] = {id, ...data}
+      this.#persist()
+    }
+  }
+  //detelando usuario por id
+  delete(table, id){
+    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+    //na variavel acima caso ele nao ache um id que seja igual ao id que veio do req.params ele retorna -1 por isso o (rowindex -1)
+    if(rowIndex > -1){
+      this.#database[table].splice(rowIndex, 1)
+      this.#persist()
+    }
   }
 }
