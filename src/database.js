@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 
-const databasePath = new URL('../../db.json', import.meta.url)
+const databasePath = new URL('../db.json', import.meta.url)
 
 export class Database {
   #database = {}
@@ -18,8 +18,18 @@ export class Database {
   #persist() {
     fs.writeFile(databasePath, JSON.stringify(this.#database))
   }
-  select(table){
-    const data = this.#database[table] ?? []
+  select(table, search){
+    let data = this.#database[table] ?? []
+    //caso tenha query params vai ser enviado a busca
+    if(search){
+      data = data.filter(row => { //percorrendo todas as linhas da tabela
+        //convertendo o objeto search em um array 
+        return Object.entries(search).some(([key, value])=> {
+          //verificando se dentro da linha do banco de dados existe o valor procurado
+          return row[key].toLowerCase().includes(value.toLowerCase()) 
+        })
+      })
+    }
     return data
   }
   insert(table,data){
@@ -40,7 +50,7 @@ export class Database {
     const rowIndex = this.#database[table].findIndex(row => row.id === id)
     //na variavel acima caso ele nao ache um id que seja igual ao id que veio do req.params ele retorna -1 por isso o (rowindex -1)
     if(rowIndex > -1){
-      this.#database[table] = {id, ...data}
+      this.#database[table][rowIndex] = {id, ...data}
       this.#persist()
     }
   }
